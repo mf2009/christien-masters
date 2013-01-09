@@ -121,8 +121,6 @@ public class GestureData {
 		
 		featureVector.add(total_time + "");
 		
-		featureVector.add(user_id + "");
-		
 		return featureVector;
 	}
 	
