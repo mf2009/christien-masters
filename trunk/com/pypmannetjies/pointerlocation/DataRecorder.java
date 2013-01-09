@@ -46,7 +46,22 @@ public class DataRecorder {
 	}
 	
 	private static void writeHeader() {
-		String header = "Time";
+		String header = "Start time," +
+						"Gesture type," +
+						"Pointer ID," +
+						"X coordinate mean, X coordinate sd," +
+						"Y coordinate mean, Y coordinate sd," +
+						"X difference," +
+						"Y difference," +
+						"Pressure mean,Pressure sd," +
+						"Size mean,Size sd," +
+						"Touch major mean,Touch major sd," +
+						"Touch minor mean,Touch minor sd," +
+						"Tool major mean,Tool major sd," +
+						"Tool minor mean,Tool minor sd," +
+						"Tool orientation mean,Tool orientation sd," +
+						"Screen orientation," +
+						"Total time";
 		addToFile(header);
 	}
 	
