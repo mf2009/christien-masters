@@ -46,6 +46,12 @@ public class AwesomeGestureListener extends SimpleOnGestureListener {
 		lastGestureType = GestureType.SCROLL;
 		return super.onScroll(e1, e2, distanceX, distanceY);
 	}
+	
+	@Override
+	public boolean onSingleTapUp(MotionEvent e) {
+		lastGestureType = GestureType.SINGLE_TAP;
+		return super.onSingleTapConfirmed(e);
+	}
 
 	@Override
 	public boolean onSingleTapConfirmed(MotionEvent e) {	

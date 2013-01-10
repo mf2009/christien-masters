@@ -2,7 +2,10 @@ package com.pypmannetjies.pointerlocation;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 import org.apache.commons.math3.stat.descriptive.*;
+import org.apache.commons.math3.util.FastMath;
 
 import com.pypmannetjies.pointerlocation.AwesomeGestureListener.GestureType;
 
@@ -12,9 +15,11 @@ import android.view.MotionEvent;
 public class GestureData {
 	
 	public enum ScreenOrientation {PORTRAIT, LANDSCAPE}
-	
+	public enum MotionDirection {UP, DOWN, LEFT, RIGHT}
+		
 	private GestureType type;
 	private int pointerID; 
+	//private double start_x, start_y, stop_x, stop_y;
 	private SynchronizedDescriptiveStatistics x_coords;
 	private SynchronizedDescriptiveStatistics y_coords;
 	private double x_diff;
@@ -35,7 +40,12 @@ public class GestureData {
 	private double end_time;
 	private double total_time;
 	private int user_id;
-	private int featureVectorStartingSize = 25;
+	
+	private double motion_angle;
+	private MotionDirection motion_direction;
+	private double motion_length;
+	
+	private int featureVectorStartingSize = 26;
 	
 	private ArrayList<String> featureVector;
 	
@@ -71,6 +81,7 @@ public class GestureData {
 	
 	public void setFinalData(MotionEvent event, int screen_orientation) {
 		this.setFinalCoordinates(event.getRawX(), event.getRawY());
+		this.setMotionFeatures(x_diff, y_diff);
 		this.screen_orientation = (screen_orientation == Configuration.ORIENTATION_PORTRAIT) ? ScreenOrientation.PORTRAIT :  ScreenOrientation.LANDSCAPE;
 		this.total_time = end_time - start_time;
 	}
@@ -89,9 +100,7 @@ public class GestureData {
 		featureVector.add(y_coords.getMean() + "");
 		featureVector.add(y_coords.getStandardDeviation() + "");
 		
-		featureVector.add(x_diff + "");
-		featureVector.add(y_diff + "");
-		
+
 		featureVector.add(pressure.getMean() + "");
 		featureVector.add(pressure.getStandardDeviation() + "");
 		
@@ -108,7 +117,6 @@ public class GestureData {
 		featureVector.add(tool_minor.getMean() + "");
 		featureVector.add(tool_minor.getStandardDeviation() + "");
 		
-		
 		/*featureVector.add(x_velocity.getMean());
 		featureVector.add(x_velocity.getStandardDeviation());
 		featureVector.add(y_velocity.getMean());
@@ -120,6 +128,12 @@ public class GestureData {
 		featureVector.add(screen_orientation + "");
 		
 		featureVector.add(total_time + "");
+		
+		featureVector.add(x_diff + "");
+		featureVector.add(y_diff + "");	
+		featureVector.add(motion_angle + "");
+		featureVector.add(motion_direction + "");
+		featureVector.add(motion_length + "");
 		
 		return featureVector;
 	}
@@ -157,6 +171,52 @@ public class GestureData {
 	public void setFinalCoordinates(double x, double y) {
 		this.x_diff = x - x_coords.getValues()[0];
 		this.y_diff = y - y_coords.getValues()[0];
+	}
+	
+	/**
+	 * Finds the angle between the vector which describes
+	 * the gesture motion and a straight vector. 
+	 * @param x_diff
+	 * @param y_diff
+	 */
+	public void setMotionFeatures(double x_diff, double y_diff) {
+		Vector3D vec = new Vector3D(x_diff, y_diff, 0);
+		Vector3D up = new Vector3D(0, -1, 0);
+		Vector3D down = new Vector3D(0, 1, 0);
+		Vector3D left = new Vector3D(-1, 0, 0);
+		Vector3D right = new Vector3D(1, 0, 0);
+		
+		double radians = 100;
+		
+		// If x differs more than y does, the movement is horizontal
+		// Compare to straight horizontal line
+		if (FastMath.abs(x_diff) > FastMath.abs(y_diff)) {
+			// If x is positive, the movement was to the right:
+			if (x_diff > 0) {
+				radians = Vector3D.angle(vec, right);
+				
+			}
+			else 
+				radians = Vector3D.angle(vec, left);
+			// If y was negative, make the angle negative too. 
+			if (y_diff < 0) 
+				radians *= -1;
+		}
+		// If y differs more than x does, the movement is vertical
+		// Compare to straight vertical line
+		else {
+			// If y is positive, the movement was downwards:
+			if (y_diff > 0)
+				radians = Vector3D.angle(vec, down);
+			else 
+				radians = Vector3D.angle(vec, up);
+			// If x was negative, make the angle negative too. 
+			if (x_diff < 0) 
+				radians *= -1;
+		}
+		
+		
+		motion_angle = FastMath.toDegrees(radians);
 	}
 	
 	public void addPressure(double pressure) {

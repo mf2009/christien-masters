@@ -30,7 +30,7 @@ public class MyPointerLocationView extends com.android.internal.widget.PointerLo
 	
 	public MyPointerLocationView(Context c) {
 		super(c);
-		DataRecorder.openFile("touch_data" + System.currentTimeMillis() + ".txt", c);
+		DataRecorder.openFile("touch_data" + System.currentTimeMillis() + ".csv", c);
 		
 		awesome = new AwesomeGestureListener();
 		detector = new GestureDetector(awesome);

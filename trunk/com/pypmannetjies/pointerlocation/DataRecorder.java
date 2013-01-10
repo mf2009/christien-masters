@@ -53,6 +53,7 @@ public class DataRecorder {
 						"Y coordinate mean, Y coordinate sd," +
 						"X difference," +
 						"Y difference," +
+						"Movement Angle,"+
 						"Pressure mean,Pressure sd," +
 						"Size mean,Size sd," +
 						"Touch major mean,Touch major sd," +
