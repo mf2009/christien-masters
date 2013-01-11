@@ -20,17 +20,15 @@ import android.widget.Spinner;
 
 public class MyPointerLocationView extends com.android.internal.widget.PointerLocationView {
 	
-	//DataRecorder dataRecorder;
 	GestureData gestureData;
-	Bitmap houseImage;
-	Paint paint;
-	double lastX, lastY, nowX, nowY;
+	double endOfLastGestureTime;
 	AwesomeGestureListener awesome;
 	GestureDetector detector;
 	
 	public MyPointerLocationView(Context c) {
 		super(c);
 		DataRecorder.openFile("touch_data" + System.currentTimeMillis() + ".csv", c);
+		endOfLastGestureTime = -1;
 		
 		awesome = new AwesomeGestureListener();
 		detector = new GestureDetector(awesome);
@@ -43,23 +41,40 @@ public class MyPointerLocationView extends com.android.internal.widget.PointerLo
 		int action = event.getAction(); 
 		
 		if (action == MotionEvent.ACTION_DOWN) {
-			gestureData = new GestureData(GestureType.UNKNOWN, 0, -1); //User ID is not known -> -1
-			gestureData.setStartTime(System.currentTimeMillis());
-			gestureData.setFancyTime(Helpers.getComplexDate());
-			gestureData.addMotionData(event);
+			gestureData = new GestureData(GestureType.UNKNOWN, 0); 
+			gestureData.recordStartTime();
+			gestureData.setTimeBefore(getInterstrokeTime());
+			gestureData.addMotionData(event);				
 		}
 		else if (action == MotionEvent.ACTION_MOVE) {
 			gestureData.addMotionData(event);
 		}
 		else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL) {
+			endOfLastGestureTime = System.currentTimeMillis();
+			
 			gestureData.setType(awesome.getLastGestureType());			
-			gestureData.setEndTime(System.currentTimeMillis());
+			gestureData.recordEndTime();
 			gestureData.addMotionData(event);
 			gestureData.setFinalData(event, getResources().getConfiguration().orientation);
 			DataRecorder.addToFile(gestureData);
 		}
 		
 		super.addTouchEvent(event);
+	}
+	
+	/**
+	 * Find the time that elapsed since the previous motionEvent completed. 
+	 * @return The inter-stroke time
+	 */
+	//TODO: test this
+	private double getInterstrokeTime() {
+		double interstrokeTime;
+		if (endOfLastGestureTime > 0)
+			interstrokeTime = System.currentTimeMillis() - endOfLastGestureTime;
+		else 
+			interstrokeTime = 0;
+		
+		return interstrokeTime;
 	}
 	
 	@Override
