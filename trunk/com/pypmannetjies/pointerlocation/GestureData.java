@@ -17,42 +17,41 @@ public class GestureData {
 	public enum ScreenOrientation {PORTRAIT, LANDSCAPE}
 	public enum MotionDirection {UP, DOWN, LEFT, RIGHT}
 		
-	private GestureType type;
-	private int pointerID; 
-	//private double start_x, start_y, stop_x, stop_y;
-	private SynchronizedDescriptiveStatistics x_coords;
-	private SynchronizedDescriptiveStatistics y_coords;
-	private double x_diff;
-	private double y_diff;
-	private SynchronizedDescriptiveStatistics pressure;
-	private SynchronizedDescriptiveStatistics size;
-	private SynchronizedDescriptiveStatistics touch_major;
-	private SynchronizedDescriptiveStatistics touch_minor;
-	private SynchronizedDescriptiveStatistics tool_major;
-	private SynchronizedDescriptiveStatistics tool_minor;
-	//private SynchronizedDescriptiveStatistics x_velocity;
-	//private SynchronizedDescriptiveStatistics y_velocity;
-	private SynchronizedDescriptiveStatistics tool_orientation;
-	private ScreenOrientation screen_orientation;
-	//private double screen_rotation;
-	private String fancy_time;
-	private double start_time;
-	private double end_time;
-	private double total_time;
-	private int user_id;
+	 GestureType type;
+	 int pointerID; 
+	 double start_time_milliseconds;
+	 double end_time_milliseconds;
+	 double start_x, start_y, stop_x, stop_y;
+	 SynchronizedDescriptiveStatistics x_coords;
+	 SynchronizedDescriptiveStatistics y_coords;
+	 SynchronizedDescriptiveStatistics pressure;
+	 SynchronizedDescriptiveStatistics size;
+	 SynchronizedDescriptiveStatistics touch_major;
+	 SynchronizedDescriptiveStatistics touch_minor;
+	 SynchronizedDescriptiveStatistics tool_major;
+	 SynchronizedDescriptiveStatistics tool_minor;
+	 SynchronizedDescriptiveStatistics tool_orientation;
+	 ScreenOrientation screen_orientation;
 	
-	private double motion_angle;
-	private MotionDirection motion_direction;
-	private double motion_length;
 	
-	private int featureVectorStartingSize = 26;
+	//TODO
+	 String start_time_fancy, end_time_fancy;
+	 double total_time;
+	 double time_before_milliseconds; //interstroke time
+	 Vector3D motion_vector;
+	 double motion_vector_length;
+	 double motion_velocity;
+	 double motion_acceleration;
+	 double motion_vector_angle;
+	 public MotionDirection motion_vector_direction;
 	
-	private ArrayList<String> featureVector;
+	 int featureVectorStartingSize = 35;
 	
-	public GestureData(GestureType type, int pointerID, int user_id) {
+	 ArrayList<String> featureVector;
+	
+	public GestureData(GestureType type, int pointerID) {
 		this.type = type;
 		this.setPointerID(pointerID);
-		this.user_id = user_id;
 		
 		this.featureVector = new ArrayList<String>(featureVectorStartingSize);
 		
@@ -67,6 +66,10 @@ public class GestureData {
 		tool_orientation = new SynchronizedDescriptiveStatistics();		
 	}
 	
+	public void setTimeBefore(double time_before_milliseconds) {
+		this.time_before_milliseconds = time_before_milliseconds;
+	}
+	
 	public void addMotionData(MotionEvent event) {
 		x_coords.addValue(event.getRawX());
 		y_coords.addValue(event.getRawY());
@@ -79,18 +82,19 @@ public class GestureData {
 		tool_orientation.addValue(event.getOrientation());
 	}
 	
-	public void setFinalData(MotionEvent event, int screen_orientation) {
-		this.setFinalCoordinates(event.getRawX(), event.getRawY());
-		this.setMotionFeatures(x_diff, y_diff);
+	public void setFinalData(MotionEvent event, int screen_orientation) {		
 		this.screen_orientation = (screen_orientation == Configuration.ORIENTATION_PORTRAIT) ? ScreenOrientation.PORTRAIT :  ScreenOrientation.LANDSCAPE;
-		this.total_time = end_time - start_time;
+		this.total_time = end_time_milliseconds - start_time_milliseconds;
+		
+		this.calculateMotionFeatures();
 	}
 	
+	//TODO: cleanup this and headers
 	public ArrayList<String> getFeatureVector() {
 		//TODO:Make this more efficient if needed
 		featureVector.clear();
 		
-		featureVector.add(fancy_time);
+		//featureVector.add(fancy_time);
 		
 		featureVector.add(type.toString());
 		featureVector.add(pointerID + "");
@@ -129,25 +133,17 @@ public class GestureData {
 		
 		featureVector.add(total_time + "");
 		
-		featureVector.add(x_diff + "");
-		featureVector.add(y_diff + "");	
-		featureVector.add(motion_angle + "");
-		featureVector.add(motion_direction + "");
-		featureVector.add(motion_length + "");
-		
 		return featureVector;
 	}
 	
-	public void setFancyTime(String fancy_time) {
-		this.fancy_time = fancy_time;
+	public void recordStartTime() {
+		this.start_time_milliseconds = System.currentTimeMillis();
+		this.start_time_fancy = Helpers.getComplexDate();
 	}
 	
-	public void setStartTime(double start_time) {
-		this.start_time = start_time;
-	}
-	
-	public void setEndTime(double end_time) {
-		this.end_time = end_time;
+	public void recordEndTime() {
+		this.end_time_milliseconds = System.currentTimeMillis();
+		this.end_time_fancy = Helpers.getComplexDate();
 	}
 	
 	public int getFeatureVectorSize() {
@@ -168,19 +164,32 @@ public class GestureData {
 		y_coords.addValue(y);
 	}
 	
-	public void setFinalCoordinates(double x, double y) {
-		this.x_diff = x - x_coords.getValues()[0];
-		this.y_diff = y - y_coords.getValues()[0];
+	/**
+	 * Find features of the motion based on the raw data.
+	 */
+	public void calculateMotionFeatures() {
+		setVector();
+		calculateMotionAngleAndDirection();
+		
 	}
 	
 	/**
-	 * Finds the angle between the vector which describes
-	 * the gesture motion and a straight vector. 
-	 * @param x_diff
-	 * @param y_diff
+	 * Sets a 3D vector based on the motion data's start and end positions.
+	 * @return The new vector
 	 */
-	public void setMotionFeatures(double x_diff, double y_diff) {
-		Vector3D vec = new Vector3D(x_diff, y_diff, 0);
+	public Vector3D setVector() {
+		double x_diff = x_coords.getValues()[x_coords.getValues().length-1] - x_coords.getValues()[0];
+		double y_diff = y_coords.getValues()[y_coords.getValues().length-1] - y_coords.getValues()[0];
+		motion_vector = new Vector3D(x_diff, y_diff, 0);
+		return motion_vector;
+	}
+	
+	/**
+	 * Calculates the angle of the motion as well as sets the general direction
+	 * flag to UP, DOWN, LEFT or RIGHT
+	 * @return The angle of the deviation from the general direction in degrees.
+	 */
+	public double calculateMotionAngleAndDirection() {
 		Vector3D up = new Vector3D(0, -1, 0);
 		Vector3D down = new Vector3D(0, 1, 0);
 		Vector3D left = new Vector3D(-1, 0, 0);
@@ -188,36 +197,54 @@ public class GestureData {
 		
 		double radians = 100;
 		
+		double x,y;
+		x = motion_vector.getX();
+		y = motion_vector.getY();
+		
 		// If x differs more than y does, the movement is horizontal
 		// Compare to straight horizontal line
-		if (FastMath.abs(x_diff) > FastMath.abs(y_diff)) {
+		if (FastMath.abs(x) > FastMath.abs(y)) {
 			// If x is positive, the movement was to the right:
-			if (x_diff > 0) {
-				radians = Vector3D.angle(vec, right);
-				
+			if (x > 0) {
+				radians = Vector3D.angle(motion_vector, right);
+				motion_vector_direction = MotionDirection.RIGHT;
 			}
-			else 
-				radians = Vector3D.angle(vec, left);
+			else {
+				radians = Vector3D.angle(motion_vector, left);
+				motion_vector_direction = MotionDirection.LEFT;
+			}
 			// If y was negative, make the angle negative too. 
-			if (y_diff < 0) 
+			if (y < 0) 
 				radians *= -1;
 		}
 		// If y differs more than x does, the movement is vertical
 		// Compare to straight vertical line
+		// Cases where x and y are equal, a vertical line is given preference
 		else {
 			// If y is positive, the movement was downwards:
-			if (y_diff > 0)
-				radians = Vector3D.angle(vec, down);
-			else 
-				radians = Vector3D.angle(vec, up);
+			if (y > 0) {
+				radians = Vector3D.angle(motion_vector, down);
+				motion_vector_direction = MotionDirection.DOWN;
+			}
+			else {
+				radians = Vector3D.angle(motion_vector, up);
+				motion_vector_direction = MotionDirection.UP;
+			}
 			// If x was negative, make the angle negative too. 
-			if (x_diff < 0) 
+			if (x < 0) 
 				radians *= -1;
 		}
 		
-		
-		motion_angle = FastMath.toDegrees(radians);
+		motion_vector_angle = FastMath.toDegrees(radians);
+		return motion_vector_angle;
 	}
+	
+	
+	//TODO: Remove public access
+	//public double calculateVectorLength() {
+		
+	//}
+	
 	
 	public void addPressure(double pressure) {
 		this.pressure.addValue(pressure);
