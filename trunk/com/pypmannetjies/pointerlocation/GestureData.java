@@ -2,7 +2,6 @@ package com.pypmannetjies.pointerlocation;
 
 import java.util.ArrayList;
 
-import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 import org.apache.commons.math3.stat.descriptive.*;
 import org.apache.commons.math3.util.FastMath;
 
@@ -31,7 +30,7 @@ public class GestureData {
 	 SynchronizedDescriptiveStatistics tool_orientation; //addMotionData
 	 ScreenOrientation screen_orientation; //setFinalData
 	 
-	 Vector3D motion_vector; //calculateMotionFeatures
+	 Vector2D motion_vector; //calculateMotionFeatures
 	 double motion_vector_angle; //calculateMotionFeatures
 	 public MotionDirection motion_vector_direction; //calculateMotionFeatures
 	 double motion_vector_length; //calculateMotionFeatures
@@ -191,10 +190,10 @@ public class GestureData {
 	 * Sets a 3D vector based on the motion data's start and end positions.
 	 * @return The new vector
 	 */
-	public Vector3D setVector() {
-		double x_diff = x_coords.getValues()[x_coords.getValues().length-1] - x_coords.getValues()[0];
-		double y_diff = y_coords.getValues()[y_coords.getValues().length-1] - y_coords.getValues()[0];
-		motion_vector = new Vector3D(x_diff, y_diff, 0);
+	public Vector2D setVector() {
+		double x = x_coords.getValues()[x_coords.getValues().length-1] - x_coords.getValues()[0];
+		double y = y_coords.getValues()[y_coords.getValues().length-1] - y_coords.getValues()[0];
+		motion_vector = new Vector2D(x, y);
 		return motion_vector;
 	}
 	
@@ -205,10 +204,10 @@ public class GestureData {
 	 * @return The angle of the deviation from the general direction in degrees.
 	 */
 	public double calculateMotionAngleAndDirection() {
-		Vector3D up = new Vector3D(0, -1, 0);
-		Vector3D down = new Vector3D(0, 1, 0);
-		Vector3D left = new Vector3D(-1, 0, 0);
-		Vector3D right = new Vector3D(1, 0, 0);
+		Vector2D up = new Vector2D(0, -1);
+		Vector2D down = new Vector2D(0, 1);
+		Vector2D left = new Vector2D(-1, 0);
+		Vector2D right = new Vector2D(1, 0);
 		
 		double radians = 100;
 		
@@ -221,11 +220,11 @@ public class GestureData {
 		if (FastMath.abs(x) > FastMath.abs(y)) {
 			// If x is positive, the movement was to the right:
 			if (x > 0) {
-				radians = Vector3D.angle(motion_vector, right);
+				radians = motion_vector.getAngle(right);
 				motion_vector_direction = MotionDirection.RIGHT;
 			}
 			else {
-				radians = Vector3D.angle(motion_vector, left);
+				radians = motion_vector.getAngle(left);
 				motion_vector_direction = MotionDirection.LEFT;
 			}
 			// If y was negative, make the angle negative too. 
@@ -238,11 +237,11 @@ public class GestureData {
 		else {
 			// If y is positive, the movement was downwards:
 			if (y > 0) {
-				radians = Vector3D.angle(motion_vector, down);
+				radians = motion_vector.getAngle(down);
 				motion_vector_direction = MotionDirection.DOWN;
 			}
 			else {
-				radians = Vector3D.angle(motion_vector, up);
+				radians = motion_vector.getAngle(up);
 				motion_vector_direction = MotionDirection.UP;
 			}
 			// If x was negative, make the angle negative too. 
@@ -262,7 +261,7 @@ public class GestureData {
 	 * @return The length of the vector
 	 */
 	public double calculateVectorLength() {
-		motion_vector_length = motion_vector.getNorm();
+		motion_vector_length = motion_vector.getLength();
 		return motion_vector_length;
 	}
 	
