@@ -26,7 +26,7 @@ public class Helpers {
 	
 	public static String getComplexDate() {
 		Date dNow = new Date( );
-	    SimpleDateFormat ft = new SimpleDateFormat ("MM.dd;hh:mm:ss");
+	    SimpleDateFormat ft = new SimpleDateFormat ("MM.dd;hh:mm:ss:SSS");
 	    return ft.format(dNow);
 	}
 	
@@ -34,6 +34,12 @@ public class Helpers {
 		Date dNow = new Date( );
 	    SimpleDateFormat ft = new SimpleDateFormat ("MM_dd");
 	    return ft.format(dNow);
+	}
+	
+	public static String getComplexDateFromMilliseconds(long milliseconds) {
+		Date time = new Date(milliseconds);
+		SimpleDateFormat ft = new SimpleDateFormat ("MM.dd;hh:mm:ss:SSS");
+	    return ft.format(time);
 	}
 	
 }

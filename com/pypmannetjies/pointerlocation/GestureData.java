@@ -19,31 +19,25 @@ public class GestureData {
 		
 	 GestureType type;
 	 int pointerID; 
-	 double start_time_milliseconds;
-	 double end_time_milliseconds;
-	 double start_x, start_y, stop_x, stop_y;
-	 SynchronizedDescriptiveStatistics x_coords;
-	 SynchronizedDescriptiveStatistics y_coords;
-	 SynchronizedDescriptiveStatistics pressure;
-	 SynchronizedDescriptiveStatistics size;
-	 SynchronizedDescriptiveStatistics touch_major;
-	 SynchronizedDescriptiveStatistics touch_minor;
-	 SynchronizedDescriptiveStatistics tool_major;
-	 SynchronizedDescriptiveStatistics tool_minor;
-	 SynchronizedDescriptiveStatistics tool_orientation;
-	 ScreenOrientation screen_orientation;
-	
-	
-	//TODO
-	 String start_time_fancy, end_time_fancy;
-	 double total_time;
-	 double time_before_milliseconds; //interstroke time
-	 Vector3D motion_vector;
-	 double motion_vector_length;
-	 double motion_velocity;
+	 double start_time_milliseconds, end_time_milliseconds; //RecordTime
+	 String start_time_fancy, end_time_fancy; //RecordTime
+	 public double total_time; //setFinalData	 
+	 private double interstroke_time_milliseconds; //Method called from View
+	 double start_x, start_y, end_x, end_y; //setFinalData
+	 SynchronizedDescriptiveStatistics x_coords, y_coords; //addMotionData
+	 SynchronizedDescriptiveStatistics pressure; //addMotionData
+	 SynchronizedDescriptiveStatistics size; //addMotionData
+	 SynchronizedDescriptiveStatistics touch_major, touch_minor; //addMotionData
+	 SynchronizedDescriptiveStatistics tool_major, tool_minor; //addMotionData
+	 SynchronizedDescriptiveStatistics tool_orientation; //addMotionData
+	 ScreenOrientation screen_orientation; //setFinalData
+	 
+	 Vector3D motion_vector; //calculateMotionFeatures
+	 double motion_vector_angle; //calculateMotionFeatures
+	 public MotionDirection motion_vector_direction; //calculateMotionFeatures
+	 double motion_vector_length; //calculateMotionFeatures
+	 double motion_speed; 
 	 double motion_acceleration;
-	 double motion_vector_angle;
-	 public MotionDirection motion_vector_direction;
 	
 	 int featureVectorStartingSize = 35;
 	
@@ -66,10 +60,6 @@ public class GestureData {
 		tool_orientation = new SynchronizedDescriptiveStatistics();		
 	}
 	
-	public void setTimeBefore(double time_before_milliseconds) {
-		this.time_before_milliseconds = time_before_milliseconds;
-	}
-	
 	public void addMotionData(MotionEvent event) {
 		x_coords.addValue(event.getRawX());
 		y_coords.addValue(event.getRawY());
@@ -82,9 +72,16 @@ public class GestureData {
 		tool_orientation.addValue(event.getOrientation());
 	}
 	
-	public void setFinalData(MotionEvent event, int screen_orientation) {		
+	public void setFinalData(MotionEvent event, int screen_orientation, double interstroke_time_milliseconds) {		
 		this.screen_orientation = (screen_orientation == Configuration.ORIENTATION_PORTRAIT) ? ScreenOrientation.PORTRAIT :  ScreenOrientation.LANDSCAPE;
+		
 		this.total_time = end_time_milliseconds - start_time_milliseconds;
+		this.interstroke_time_milliseconds = interstroke_time_milliseconds;
+		
+		this.start_x = x_coords.getValues()[0];
+		this.start_y = y_coords.getValues()[0];
+		this.end_x = x_coords.getValues()[x_coords.getValues().length-1]; //Last recorded x_coord
+		this.end_y = y_coords.getValues()[y_coords.getValues().length-1]; //Last recorded x_coord
 		
 		this.calculateMotionFeatures();
 	}
@@ -94,17 +91,30 @@ public class GestureData {
 		//TODO:Make this more efficient if needed
 		featureVector.clear();
 		
-		//featureVector.add(fancy_time);
-		
+		// TYPE + POINTER ID
 		featureVector.add(type.toString());
 		featureVector.add(pointerID + "");
+		
+		// TIME
+		featureVector.add(start_time_fancy + "");
+		featureVector.add(end_time_fancy + "");
+		
+		//TODO: Put in fancy format
+		featureVector.add(total_time + "");
+		featureVector.add(interstroke_time_milliseconds + "");
+		
+		// COORDINATES
+		featureVector.add(start_x + "");
+		featureVector.add(start_y + "");
+		featureVector.add(end_x + "");
+		featureVector.add(end_y + "");
 		
 		featureVector.add(x_coords.getMean() + "");
 		featureVector.add(x_coords.getStandardDeviation() + "");
 		featureVector.add(y_coords.getMean() + "");
 		featureVector.add(y_coords.getStandardDeviation() + "");
 		
-
+		// PRESSURE, SIZE, TOOLS
 		featureVector.add(pressure.getMean() + "");
 		featureVector.add(pressure.getStandardDeviation() + "");
 		
@@ -121,17 +131,18 @@ public class GestureData {
 		featureVector.add(tool_minor.getMean() + "");
 		featureVector.add(tool_minor.getStandardDeviation() + "");
 		
-		/*featureVector.add(x_velocity.getMean());
-		featureVector.add(x_velocity.getStandardDeviation());
-		featureVector.add(y_velocity.getMean());
-		featureVector.add(y_velocity.getStandardDeviation());*/
-		
 		featureVector.add(tool_orientation.getMean() + "");
 		featureVector.add(tool_orientation.getStandardDeviation() + "");
 		
+		// SCREEN ORIENTATION
 		featureVector.add(screen_orientation + "");
 		
-		featureVector.add(total_time + "");
+		// MOTION FEATURES
+		featureVector.add(motion_vector_angle + "");
+		featureVector.add(motion_vector_direction + "");
+		featureVector.add(motion_vector_length + "");
+		featureVector.add(motion_speed + "");
+		featureVector.add(motion_acceleration + "");
 		
 		return featureVector;
 	}
@@ -164,15 +175,19 @@ public class GestureData {
 		y_coords.addValue(y);
 	}
 	
+	//TODO: Remove public access
 	/**
 	 * Find features of the motion based on the raw data.
 	 */
 	public void calculateMotionFeatures() {
 		setVector();
 		calculateMotionAngleAndDirection();
-		
+		calculateVectorLength();
+		calculateMotionSpeed();
+		calculateMotionAcceleration();
 	}
 	
+	//TODO: Remove public access
 	/**
 	 * Sets a 3D vector based on the motion data's start and end positions.
 	 * @return The new vector
@@ -184,6 +199,7 @@ public class GestureData {
 		return motion_vector;
 	}
 	
+	//TODO: Remove public access
 	/**
 	 * Calculates the angle of the motion as well as sets the general direction
 	 * flag to UP, DOWN, LEFT or RIGHT
@@ -241,12 +257,39 @@ public class GestureData {
 	
 	
 	//TODO: Remove public access
-	//public double calculateVectorLength() {
-		
-	//}
+	/**
+	 * Calculates the length of the vector which describes the motion's 
+	 * start and end position.
+	 * @return The length of the vector
+	 */
+	public double calculateVectorLength() {
+		motion_vector_length = motion_vector.getNorm();
+		return motion_vector_length;
+	}
 	
+	//TODO: Remove public access
+	/**
+	 * Calculates the average speed of the motion as the length 
+	 * of the motion vector over time as "pixels per millisecond"
+	 * @return The motion's speed
+	 */
+	public double calculateMotionSpeed() {
+		motion_speed = motion_vector_length / total_time;
+		return motion_speed;
+	}
 	
-	public void addPressure(double pressure) {
+	//TODO: Remove public access
+	/**
+	 * Calculates the average speed of the motion as the length 
+	 * of the motion vector over time as "pixels per millisecond"
+	 * @return The motion's speed
+	 */
+	public double calculateMotionAcceleration() {
+		motion_acceleration = motion_speed / total_time;
+		return motion_acceleration;
+	}
+	
+	/*public void addPressure(double pressure) {
 		this.pressure.addValue(pressure);
 	}
 	
@@ -272,7 +315,6 @@ public class GestureData {
 	
 	public void addToolOrientation(double tool_orientation) {
 		this.tool_orientation.addValue(tool_orientation);
-	}
-	
+	}*/
 	
 }
