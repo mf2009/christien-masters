@@ -1,7 +1,6 @@
 package com.pypmannetjies.pointerlocation;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import org.apache.commons.math3.geometry.euclidean.threed.Vector3D;
 import org.apache.commons.math3.stat.descriptive.*;
