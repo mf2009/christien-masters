@@ -13,9 +13,11 @@ public class MyPointerLocationView extends com.android.internal.widget.PointerLo
 	double endOfLastGestureTime;
 	AwesomeGestureListener awesome;
 	GestureDetector detector;
+	Context theContext;
 	
 	public MyPointerLocationView(Context c) {
 		super(c);
+		this.theContext = c;
 		DataRecorder.openFile("touch_data" + System.currentTimeMillis() + ".csv", c);
 		endOfLastGestureTime = -1;
 		
@@ -25,6 +27,7 @@ public class MyPointerLocationView extends com.android.internal.widget.PointerLo
 
 	@Override
 	public void addTouchEvent(MotionEvent event) {
+		DataRecorder.openFile("touch_data" + System.currentTimeMillis() + ".csv", theContext); // Will check if file exists (hack)
 		detector.onTouchEvent(event);
 		
 		int action = event.getAction(); 

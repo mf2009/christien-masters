@@ -20,28 +20,30 @@ public class DataRecorder {
 	private static boolean isOpen;
 	
 	public static void openFile(String filename, Context context) {
-		try {
-			File directory = new File(Environment.getExternalStorageDirectory() + "/touch/");
-			
-			if (!directory.exists()) {
-				if (directory.mkdir()) {
-					System.out.println("Directory created");
-					//Toast.makeText(context, "Directory created for user " + userID, Toast.LENGTH_LONG).show();
+		if (!isOpen) {
+			try {
+				File directory = new File(Environment.getExternalStorageDirectory() + "/touch/");
+				
+				if (!directory.exists()) {
+					if (directory.mkdir()) {
+						System.out.println("Directory created");
+						//Toast.makeText(context, "Directory created for user " + userID, Toast.LENGTH_LONG).show();
+					}
+					
 				}
 				
+				File file = new File(directory.getPath() + "/" + filename);
+				fwriter = new FileWriter(file, true);
+				isOpen = true;
+				writeHeader();
+				
+			} catch (FileNotFoundException e) {
+				System.err.println("Error creating file");
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-			
-			File file = new File(directory.getPath() + "/" + filename);
-			fwriter = new FileWriter(file, true);
-			isOpen = true;
-			writeHeader();
-			
-		} catch (FileNotFoundException e) {
-			System.err.println("Error creating file");
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 	}
 	
@@ -104,6 +106,7 @@ public class DataRecorder {
 		if (isOpen) {
 			try {
 				fwriter.close();
+				isOpen = false;
 			} catch (IOException e) {
 				System.err.println("Error closing file");
 				e.printStackTrace();
