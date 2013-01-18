@@ -33,7 +33,7 @@ public class DataSpewer {
 	}
 	
 	public static void spew(GestureData data) {
-		String s = "<*>";
+		String s = "<*>POINTERLOCATION<*>,";
 		ArrayList<String> features = data.getFeatureVector();
 		
 		for (String f : features) {
