@@ -19,6 +19,7 @@ public class MyPointerLocationView extends com.android.internal.widget.PointerLo
 		super(c);
 		this.theContext = c;
 		//DataRecorder.openFile("touch_data" + System.currentTimeMillis() + ".csv", c);
+		DataSpewer.spewHeader();
 		endOfLastGestureTime = -1;
 		
 		awesome = new AwesomeGestureListener();
