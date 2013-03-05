@@ -17,8 +17,6 @@ public class DataRecorder {
 	
 	private static FileOutputStream fOut;
 	private static BufferedOutputStream bufferedOut;
-	//private static FileWriter fwriter;
-	//private static OutputStreamWriter writer;
 	private static boolean isOpen;
 	private static Context context;
 	
@@ -26,15 +24,6 @@ public class DataRecorder {
 		DataRecorder.context = context;
 		if (!isOpen) {
 			try {
-				//File directory = new File(Environment.getExternalStorageDirectory() + "/touch/");
-				
-				/*if (!directory.exists()) {
-					if (directory.mkdir()) {
-						System.out.println("Directory created");
-						//Toast.makeText(context, "Directory created for user " + userID, Toast.LENGTH_LONG).show();
-					}
-					
-				}*/
 				
 				System.out.println(context.getFilesDir().getAbsolutePath());
 				String s = context.getFilesDir().getAbsolutePath();
@@ -42,8 +31,6 @@ public class DataRecorder {
 				fOut = context.openFileOutput(filename, Context.MODE_PRIVATE);
 				bufferedOut = new BufferedOutputStream(fOut);
 				
-				//File file = new File(directory.getPath() + "/" + filename);
-				//fwriter = new FileWriter(file, true);
 				isOpen = true;
 				writeHeader();
 				
@@ -51,39 +38,12 @@ public class DataRecorder {
 				System.err.println("Error creating file");
 				e.printStackTrace();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		}
 	}
 	
-	private static void writeHeader() {
-		String header = "Gesture type," +
-						"Pointer ID," +
-						
-						"Start time fancy," +
-						"End time fancy," +
-						"Total time ms," +
-						"Interstroke time ms," +
-						
-						"Start x,Starty,End x,End y," +
-						"X coordinate mean, X coordinate sd," +
-						"Y coordinate mean, Y coordinate sd," +
-						
-						"Pressure mean,Pressure sd," +
-						"Size mean,Size sd," +
-						"Touch major mean,Touch major sd," +
-						"Touch minor mean,Touch minor sd," +
-						"Tool major mean,Tool major sd," +
-						"Tool minor mean,Tool minor sd," +
-						"Tool orientation mean,Tool orientation sd," +
-						
-						"Screen orientation," +
-						
-						"Vector angle,Vector direction,Vector length,Average speed,Average acceleration";
-		
-		addToFile(header);
-	}
+	
 	
 	public static void addToFile(GestureData gesture) {
 		String s = "";//Helpers.getComplexDate() + ",";
@@ -132,4 +92,32 @@ public class DataRecorder {
 		}
 	}
 	
+	
+	private static void writeHeader() {
+		String header = "Gesture type," +
+						"Pointer ID," +
+						
+						"Start time fancy," +
+						"End time fancy," +
+						"Total time ms," +
+						"Interstroke time ms," +
+						
+						"Start x,Starty,End x,End y," +
+						"X coordinate mean, X coordinate sd," +
+						"Y coordinate mean, Y coordinate sd," +
+						
+						"Pressure mean,Pressure sd," +
+						"Size mean,Size sd," +
+						"Touch major mean,Touch major sd," +
+						"Touch minor mean,Touch minor sd," +
+						"Tool major mean,Tool major sd," +
+						"Tool minor mean,Tool minor sd," +
+						"Tool orientation mean,Tool orientation sd," +
+						
+						"Screen orientation," +
+						
+						"Vector angle,Vector direction,Vector length,Average speed,Average acceleration";
+		
+		addToFile(header);
+	}
 }

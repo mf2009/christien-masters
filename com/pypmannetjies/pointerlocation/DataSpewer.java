@@ -5,7 +5,8 @@ import java.util.ArrayList;
 public class DataSpewer {
 	
 	public static void spewHeader() {
-		String header = "Gesture type," +
+		String header = 
+				"Gesture type," +
 				"Pointer ID," +
 				
 				"Start time fancy," +
@@ -29,11 +30,11 @@ public class DataSpewer {
 				
 				"Vector angle,Vector direction,Vector length,Average speed,Average acceleration";
 		
-		System.out.println("<*>" + header);
+		System.out.println("POINTERLOCATION," + header);
 	}
 	
-	public static void spew(GestureData data) {
-		String s = "<*>POINTERLOCATION<*>,";
+	public static void spewAverages(GestureData data) {
+		String s = "POINTERLOCATION,";
 		ArrayList<String> features = data.getFeatureVector();
 		
 		for (String f : features) {
@@ -43,6 +44,11 @@ public class DataSpewer {
 		s = s.substring(0, s.length()-1);
 		
 		System.out.println(s);
+		//System.out.println("LOPLOPLOPLOPLOPLOPLOP");
+	}
+	
+	public static void spewContinuously(String s) {
+		System.out.println("CONTINUOUS," + s);
 	}
 
 }

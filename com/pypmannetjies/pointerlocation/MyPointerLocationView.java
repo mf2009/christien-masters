@@ -4,6 +4,7 @@ import com.pypmannetjies.pointerlocation.AwesomeGestureListener.GestureType;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 
@@ -28,15 +29,15 @@ public class MyPointerLocationView extends com.android.internal.widget.PointerLo
 
 	@Override
 	public void addTouchEvent(MotionEvent event) {
-		//DataRecorder.openFile("touch_data" + System.currentTimeMillis() + ".csv", theContext); // Will check if file exists (hack)
 		detector.onTouchEvent(event);
 		
 		int action = event.getAction(); 
-		
+
 		if (action == MotionEvent.ACTION_DOWN) {
 			gestureData = new GestureData(GestureType.UNKNOWN, 0); 
 			gestureData.recordStartTime();
-			gestureData.addMotionData(event);				
+			gestureData.addMotionData(event);		
+			
 		}
 		else if (action == MotionEvent.ACTION_MOVE) {
 			gestureData.addMotionData(event);
@@ -48,8 +49,8 @@ public class MyPointerLocationView extends com.android.internal.widget.PointerLo
 			gestureData.setFinalData(event, getResources().getConfiguration().orientation, getInterstrokeTime());
 			
 			//DataRecorder.addToFile(gestureData);
-			DataSpewer.spew(gestureData);
-		}
+			DataSpewer.spewAverages(gestureData);
+		}		
 		
 		super.addTouchEvent(event);
 	}
