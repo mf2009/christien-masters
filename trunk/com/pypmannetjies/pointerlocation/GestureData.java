@@ -7,7 +7,7 @@ import org.apache.commons.math3.util.FastMath;
 
 import com.pypmannetjies.pointerlocation.AwesomeGestureListener.GestureType;
 
-import android.content.res.Configuration;
+import android.graphics.Point;
 import android.view.MotionEvent;
 
 public class GestureData {
@@ -15,8 +15,8 @@ public class GestureData {
 	public enum ScreenOrientation {PORTRAIT, LANDSCAPE}
 	public enum MotionDirection {UP, DOWN, LEFT, RIGHT}
 		
-	 GestureType type;
-	 int pointerID; 
+	 GestureType type; //constructor
+	 int pointerID; //constructor - always -1 for now
 	 double start_time_milliseconds, end_time_milliseconds; //RecordTime
 	 String start_time_fancy, end_time_fancy; //RecordTime
 	 public double total_time; //setFinalData	 
@@ -29,6 +29,7 @@ public class GestureData {
 	 SynchronizedDescriptiveStatistics tool_major, tool_minor; //addMotionData
 	 SynchronizedDescriptiveStatistics tool_orientation; //addMotionData
 	 ScreenOrientation screen_orientation; //setFinalData
+	 boolean keyboard_visible; //setFinalData
 	 
 	 Vector2D motion_vector; //calculateMotionFeatures
 	 double motion_vector_angle; //calculateMotionFeatures
@@ -40,6 +41,31 @@ public class GestureData {
 	 int featureVectorStartingSize = 35;
 	
 	 ArrayList<String> featureVector;
+	 
+	 static String header = "POINTERLOCATION," + 
+				"Gesture type," +
+				"Pointer ID," +
+				
+				"Start time fancy," +
+				"End time fancy," +
+				"Total time ms," +
+				"Interstroke time ms," +
+				
+				"Start x,Starty,End x,End y," +
+				"X coordinate mean, X coordinate sd," +
+				"Y coordinate mean, Y coordinate sd," +
+				
+				"Pressure mean,Pressure sd," +
+				"Size mean,Size sd," +
+				"Touch major mean,Touch major sd," +
+				"Touch minor mean,Touch minor sd," +
+				"Tool major mean,Tool major sd," +
+				"Tool minor mean,Tool minor sd," +
+				"Tool orientation mean,Tool orientation sd," +
+				
+				"Screen orientation," +
+				
+				"Vector angle,Vector direction,Vector length,Average speed,Average acceleration";
 	
 	public GestureData(GestureType type, int pointerID) {
 		this.type = type;
@@ -70,8 +96,9 @@ public class GestureData {
 		tool_orientation.addValue(event.getOrientation());
 	}
 	
-	public void setFinalData(MotionEvent event, int screen_orientation, double interstroke_time_milliseconds) {		
-		this.screen_orientation = (screen_orientation == Configuration.ORIENTATION_PORTRAIT) ? ScreenOrientation.PORTRAIT :  ScreenOrientation.LANDSCAPE;
+	public void setFinalData(MotionEvent event, double interstroke_time_milliseconds, ScreenOrientation screenOrientation, boolean keyboardVisible) {		
+		this.screen_orientation = screenOrientation;
+		this.keyboard_visible = keyboardVisible;
 		
 		this.total_time = end_time_milliseconds - start_time_milliseconds;
 		this.interstroke_time_milliseconds = interstroke_time_milliseconds;
@@ -134,6 +161,9 @@ public class GestureData {
 		
 		// SCREEN ORIENTATION
 		featureVector.add(screen_orientation + "");
+		
+		// KEYBOARD VISIBLE
+		featureVector.add(keyboard_visible + "");
 		
 		// MOTION FEATURES
 		featureVector.add(motion_vector_angle + "");
@@ -287,32 +317,21 @@ public class GestureData {
 		return motion_acceleration;
 	}
 	
-	/*public void addPressure(double pressure) {
-		this.pressure.addValue(pressure);
+	public static String getHeader() {
+		return header;
 	}
 	
-	public void addSize(double size) {
-		this.size.addValue(size);
+	/**
+	 * A special method to set all the coordinate values for normalising purposes.
+	 * Sets Start(x+y), End(x+y), (x+y)coords
+	 * Not used
+	 * @param screenSize
+	 */
+	private void setBounds(Point screenSize) {
+		this.start_x = screenSize.x; 
+		this.start_y = screenSize.y;
+		this.end_x = screenSize.x; 
+		this.end_y = screenSize.y;
 	}
-	
-	public void addTouchMajor(double touchMajor) {
-		this.touch_major.addValue(touchMajor);
-	}
-	
-	public void addTouchMinor(double touchMinor) {
-		this.touch_minor.addValue(touchMinor);
-	}
-	
-	public void addToolMajor(double touchMajor) {
-		this.tool_major.addValue(touchMajor);
-	}
-	
-	public void addToolMinor(double touchMinor) {
-		this.tool_minor.addValue(touchMinor);
-	}
-	
-	public void addToolOrientation(double tool_orientation) {
-		this.tool_orientation.addValue(tool_orientation);
-	}*/
 	
 }

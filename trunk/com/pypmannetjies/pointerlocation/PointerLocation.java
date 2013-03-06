@@ -18,8 +18,6 @@ package com.pypmannetjies.pointerlocation;
 
 //import com.android.internal.widget.PointerLocationView;
 
-import com.android.internal.widget.PointerLocationView;
-
 import android.app.Activity;
 import android.os.Bundle;
 import android.view.WindowManager;
