@@ -41,5 +41,5 @@ public class Helpers {
 		SimpleDateFormat ft = new SimpleDateFormat ("MM.dd;hh:mm:ss:SSS");
 	    return ft.format(time);
 	}
-	
+		
 }
